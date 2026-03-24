@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday Sayangku</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Montserrat:wght@300;400;600&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body, html {
+            width: 100%; height: 100%; overflow: hidden;
+            background: linear-gradient(to bottom, #0a0a1a 0%, #1a1025 50%, #2d1b2e 100%);
+            font-family: 'Montserrat', sans-serif;
+            touch-action: none; 
+        }
+
+        /* --- OPTIMASI TINGKAT DEWA: GPU FORCING --- */
+        .star, .firefly, .falling-petal, .magical-dust, .leaf-wrapper, .flower-wrapper, .floating-heart, .intro-photo, #text-mosaic-content {
+            will-change: transform, opacity;
+            transform: translateZ(0); /* Memaksa Hardware Acceleration */
+            backface-visibility: hidden;
+        }
+
+        /* --- 1. LAYAR PEMBUKA --- */
+        #intro-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(10, 10, 26, 0.95); 
+            z-index: 100; transition: opacity 1.5s ease-in-out; cursor: pointer; overflow: hidden;
+        }
+        
+        #intro-bg-photos { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .intro-photo {
+            position: absolute; object-fit: cover; border-radius: 8px;
+            opacity: 0.15; box-shadow: 0 0 10px rgba(255,255,255,0.05); 
+            animation: floatIntro 20s infinite alternate ease-in-out; 
+        }
+
+        .date-box { 
+            border: 2px solid rgba(255, 182, 193, 0.5); padding: 20px 40px; border-radius: 15px; 
+            text-align: center; box-shadow: 0 0 20px rgba(255, 182, 193, 0.2); 
+            transition: transform 0.3s ease; position: relative; z-index: 10;
+            background: rgba(0,0,0,0.7); 
+        }
+        .date-box:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 182, 193, 0.3); }
+        .date-number { font-family: 'Cinzel', serif; font-size: 5rem; color: #ffe0e6; text-shadow: 0 0 10px #ffe0e6; }
+        .date-text { font-size: 1.2rem; color: #e0b0b6; letter-spacing: 3px; margin-top: -10px; }
+        .hint-text { margin-top: 30px; color: rgba(255,255,255,0.7); font-size: 0.9rem; animation: pulse 2s infinite; z-index: 10; }
+
+        /* --- 2. BINTANG & BINTANG JATUH --- */
+        #star-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle ease-in-out infinite; box-shadow: 0 0 5px white; }
+        .shooting-star {
+            position: absolute; width: 150px; height: 2px;
+            background: linear-gradient(to right, rgba(255,255,255,0), #ffb6c1, rgba(255,255,255,1));
+            border-radius: 50%; transform: rotate(-45deg);
+            animation: shoot 2.5s linear infinite; opacity: 0; 
+        }
+
+        /* --- 3. DEKORASI ATAS --- */
+        .top-decor { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); z-index: 5; opacity: 0; transition: opacity 2s ease 1s; pointer-events: none;}
+        .top-decor svg { filter: drop-shadow(0 0 5px rgba(255, 182, 193, 0.3)); animation: float 4s ease-in-out infinite; }
+
+        /* --- 4. HEART PHOTO --- */
+        #heart-photo-container {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            width: 250px; height: 250px; z-index: 10; cursor: pointer; opacity: 0; transition: all 1.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        #heart-photo-container:hover { transform: translate(-50%, -50%) scale(1.05); filter: drop-shadow(0 0 15px rgba(255, 182, 193, 0.4)); }
+        .heart-mask { width: 100%; height: 100%; clip-path: url(#heartClip); background: rgba(255, 255, 255, 0.1); display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 83px; gap: 2px; }
+        .heart-mask img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s; }
+        .heart-mask img:hover { opacity: 1; }
+        .click-heart-hint { position: absolute; bottom: -30px; width: 100%; text-align: center; color: #ffe0e6; font-size: 0.8rem; letter-spacing: 2px; animation: pulse 2s infinite; }
+
+        /* --- 5. TAMAN & KUNANG-KUNANG --- */
+        #garden-bottom {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 30vh;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            z-index: 15; opacity: 0; transition: opacity 2s ease 1.5s; pointer-events: none; overflow: hidden;
+        }
+        .flower-wrapper, .leaf-wrapper { position: absolute; bottom: -10px; transform-origin: bottom center; animation: sway 4s ease-in-out infinite alternate; }
+        #firefly-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 40vh; z-index: 16; pointer-events: none; opacity: 0; transition: opacity 2s ease 1.5s; }
+        .firefly { position: absolute; width: 4px; height: 4px; background: #fffde7; border-radius: 50%; box-shadow: 0 0 8px 1px rgba(255, 245, 157, 0.6); transition: transform 0.5s ease-out; animation: floatFirefly 4s ease-in-out infinite alternate, blinkFirefly 2s infinite; }
+
+        /* --- 6. SURAT & POEM DIGITAL --- */
+        #letter-screen, #poem-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 70vh; 
+            z-index: 5; opacity: 0; pointer-events: none; transition: all 1.3s ease;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(15, 10, 25, 0.95); 
+            border-bottom: 2px solid rgba(255, 182, 193, 0.2); box-shadow: inset 0 -20px 30px rgba(0,0,0,0.2);
+        }
+        #letter-screen.show, #poem-screen.show { opacity: 1; pointer-events: auto; }
+        
+        #romantic-bg-container, #romantic-bg-container-poem { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 6; pointer-events: none; opacity: 0; transition: opacity 2s ease; overflow: hidden; }
+        #romantic-bg-container-poem { opacity: 1; }
+        .floating-heart { position: absolute; width: 12px; height: 12px; background-color: rgba(255, 182, 193, 0.4); transform: rotate(-45deg); animation: floatUpHeart 7s ease-in infinite; }
+        .floating-heart::before, .floating-heart::after { content: ""; position: absolute; width: 12px; height: 12px; background-color: inherit; border-radius: 50%; }
+        .floating-heart::before { top: -6px; left: 0; }
+        .floating-heart::after { left: 6px; top: 0; }
+        .magical-dust { position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%; box-shadow: 0 0 6px 1px #ffb6c1; animation: floatDust 4s ease-in-out infinite alternate; }
+        
+        .letter-inner, .poem-inner { width: 90%; max-width: 600px; max-height: 80%; display: flex; flex-direction: column; align-items: center; z-index: 10; position: relative; }
+        .letter-title, .poem-title { font-family: 'Playfair Display', serif; color: #ffe0e6; font-size: 2.5rem; margin-bottom: 15px; text-shadow: 0 0 10px rgba(255,255,255,0.2); text-align: center;}
+        
+        .letter-content-scroll, .poem-content-scroll { 
+            width: 100%; overflow-y: auto; padding-right: 10px; margin-bottom: 25px; 
+            scrollbar-width: thin; scrollbar-color: rgba(255, 182, 193, 0.2) transparent;
+        }
+        .letter-content-scroll::-webkit-scrollbar, .poem-content-scroll::-webkit-scrollbar { width: 4px; background: transparent; }
+        .letter-content-scroll::-webkit-scrollbar-thumb, .poem-content-scroll::-webkit-scrollbar-thumb { background: rgba(255, 182, 193, 0.2); border-radius: 2px; }
+        
+        .letter-content, .poem-content { color: #e0b0b6; line-height: 1.8; font-size: 1.05rem; text-align: justify; }
+        .poem-content { font-style: italic; font-size: 1.1rem; } 
+        
+        .ps-btn {
+            background: transparent; border: 1px solid rgba(255, 182, 193, 0.5); color: #ffe0e6; padding: 12px 25px; border-radius: 30px;
+            font-family: 'Montserrat', sans-serif; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; letter-spacing: 1px;
+            opacity: 0; pointer-events: none; margin: 5px; flex-shrink: 0; 
+        }
+        .ps-btn.show-btn { opacity: 1; pointer-events: auto; }
+        .ps-btn:hover { background: rgba(255, 182, 193, 0.2); box-shadow: 0 0 15px rgba(255, 182, 193, 0.4); transform: translateY(-2px); }
+
+        /* --- 7. MOZAIK TEKS --- */
+        #mosaic-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 26, 0.98); 
+            z-index: 50; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 1s ease;
+        }
+        #mosaic-screen.show { opacity: 1; pointer-events: auto; }
+        .zoom-container { width: 85vw; max-width: 600px; height: 60vh; max-height: 700px; border-radius: 15px; overflow: hidden; position: relative; cursor: crosshair; box-shadow: 0 0 20px rgba(255, 182, 193, 0.2); border: 1px solid rgba(255, 182, 193, 0.3); background: #000; }
+        
+        #text-mosaic-content {
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-size: 7px; line-height: 7px; 
+            text-align: justify; font-weight: bold; word-break: break-all;
+            background: url('bg.jpg') center center / cover no-repeat;
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            color: transparent; transition: transform 0.1s ease-out;
+            display: block; overflow: hidden; 
+        }
+        .mosaic-hint { color: #e0b0b6; margin-top: 15px; font-size: 1rem; letter-spacing: 1px; animation: pulse 2s infinite; text-align: center;}
+
+        /* --- 8. MINI GAME --- */
+        #game-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 26, 0.95); 
+            z-index: 60; display: none; opacity: 0; transition: opacity 1s ease; overflow: hidden;
+        }
+        .game-header { position: absolute; top: 30px; width: 100%; text-align: center; color: #ffe0e6; font-family: 'Cinzel', serif; font-size: 1.4rem; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        #basket {
+            position: absolute; bottom: 20px; left: 0; /* Left diatur JS pakai transform */
+            width: 90px; height: 45px; background: repeating-linear-gradient(45deg, #8B5A2B, #8B5A2B 8px, #A0522D 8px, #A0522D 16px);
+            border-radius: 8px 8px 45px 45px; box-shadow: inset 0 8px 8px rgba(0,0,0,0.5);
+            pointer-events: none; border: 2px solid #5C3A21; border-top: 4px solid #4A2E1B;
+            will-change: transform;
+        }
+        .falling-petal {
+            position: absolute; width: 20px; height: 20px; top: 0; left: 0; 
+            background: radial-gradient(circle at top left, #fff, #ffb6c1);
+            border-radius: 50% 0 50% 50%; box-shadow: 0 0 5px rgba(255,182,193,0.5);
+            pointer-events: none;
+        }
+        #win-message {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(30, 20, 40, 0.95); 
+            padding: 40px; border-radius: 20px; border: 1px solid rgba(255,182,193,0.3); text-align: center;
+            display: none; box-shadow: 0 0 30px rgba(255,182,193,0.2); 
+            z-index: 61; width: 85%; max-width: 500px;
+        }
+        #win-message h2 { font-family: 'Playfair Display', serif; color: #fff; font-size: 2.5rem; margin-bottom: 20px; }
+
+        /* --- 10. VIDEO PLAYER --- */
+        #video-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 26, 0.98); 
+            z-index: 80; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 1.5s ease;
+        }
+        #video-screen.show { opacity: 1; pointer-events: auto; }
+        
+        .video-container { position: relative; width: 90vw; max-width: 800px; border-radius: 15px; overflow: hidden; box-shadow: 0 0 20px rgba(255, 182, 193, 0.2); border: 2px solid rgba(255, 182, 193, 0.3); background: transparent; }
+        #memory-video { width: 100%; display: block; outline: none; cursor: pointer; }
+        #memory-video::-webkit-media-controls { display: none !important; }
+        #memory-video::-webkit-media-controls-enclosure { display: none !important; }
+
+        .close-video-btn {
+            position: absolute; top: 25px; right: 25px; background: rgba(255, 182, 193, 0.2); border: 1px solid rgba(255, 182, 193, 0.5); color: #ffe0e6;
+            border-radius: 50%; width: 45px; height: 45px; font-size: 1.2rem; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            z-index: 81; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(255, 182, 193, 0.2);
+        }
+        .close-video-btn:hover { background: rgba(255,182,193,0.5); transform: scale(1.1); }
+
+        .play-pause-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80px; height: 80px; background: rgba(255, 182, 193, 0.3); border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            color: #ffe0e6; font-size: 2rem; pointer-events: none; opacity: 1; transition: opacity 0.3s;
+            box-shadow: 0 0 15px rgba(255, 182, 193, 0.3); border: 2px solid rgba(255, 182, 193, 0.6);
+        }
+
+        /* Keyframes yang Dioptimalkan */
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        /* Box-shadow dihilangkan dari animasi agar super ringan, shadow-nya statis di class-nya */
+        @keyframes twinkle { 0%, 100% { opacity: 0.1; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+        @keyframes shoot { 0% { transform: translateX(100vw) translateY(-15vh) rotate(-45deg); opacity: 1; } 100% { transform: translateX(-50vw) translateY(85vh) rotate(-45deg); opacity: 0; } }
+        @keyframes sway { 0% { transform: rotate(-6deg); } 100% { transform: rotate(6deg); } }
+        @keyframes sway-leaf { 0% { transform: rotate(-10deg); } 100% { transform: rotate(10deg); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes floatFirefly { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(25px, -30px, 0); } }
+        @keyframes blinkFirefly { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+        @keyframes floatUpHeart { 0% { transform: translateY(70vh) rotate(-45deg) scale(0.5); opacity: 0; } 20% { opacity: 0.8; } 80% { opacity: 0.8; } 100% { transform: translateY(-10vh) rotate(-45deg) scale(1.2); opacity: 0; } }
+        @keyframes floatDust { 0% { transform: translate3d(0,0,0) scale(0.8); opacity: 0.1; } 50% { opacity: 0.8; } 100% { transform: translate3d(30px, -100px, 0) scale(1.2); opacity: 0; } }
+        @keyframes floatIntro { 0% { transform: translate3d(0, 0, 0) rotate(-15deg) scale(1); opacity: 0; } 10% { opacity: 0.15; } 90% { opacity: 0.15; } 100% { transform: translate3d(60px, -60px, 0) rotate(15deg) scale(1.2); opacity: 0; } }
+    </style>
+</head>
+<body onmousemove="handleMouseMove(event)" ontouchmove="handleTouchMove(event)">
+
+    <audio id="bg-music" loop preload="auto"><source src="lagu-kita.mp3" type="audio/mpeg"></audio>
+    <svg width="0" height="0"><defs><clipPath id="heartClip" clipPathUnits="objectBoundingBox"><path d="M0.5,0.95 C 0.5,0.95, 0,0.55, 0,0.3 C 0,0.1, 0.2,0, 0.35,0 C 0.45,0, 0.5,0.1, 0.5,0.1 C 0.5,0.1, 0.55,0, 0.65,0 C 0.8,0, 1,0.1, 1,0.3 C 1,0.55, 0.5,0.95, 0.5,0.95 Z" /></clipPath></defs></svg>
+
+    <div id="intro-screen" onclick="startExperience()">
+        <div id="intro-bg-photos"></div>
+        <div class="date-box"><div class="date-number">29</div><div class="date-text">MARET 2026</div></div>
+        <p class="hint-text">HAPPY BIRTHDAY! LOVE OF MY LIFE</p>
+    </div>
+
+    <div id="star-container"></div>
+    <div class="top-decor" id="top-decor">
+        <svg width="100" height="50" viewBox="0 0 100 50">
+            <path d="M50,40 C50,40 20,10 10,20 C0,30 20,40 50,50 C80,40 100,30 90,20 C80,10 50,40 50,40 Z" fill="rgba(255, 182, 193, 0.3)" stroke="#ffe0e6" stroke-width="1"/>
+            <circle cx="50" cy="20" r="3" fill="#ffe0e6"/>
+            <path d="M20,25 L80,25" stroke="rgba(255, 255, 255, 0.2)" stroke-width="1" stroke-dasharray="2,2"/>
+        </svg>
+    </div>
+
+    <div id="heart-photo-container" onclick="openLetter()">
+        <div class="heart-mask" id="heart-grid"></div>
+        <div class="click-heart-hint">klik foto my moi :p</div>
+    </div>
+
+    <div id="garden-bottom"></div>
+    <div id="firefly-container"></div>
+
+    <div id="letter-screen">
+        <div id="romantic-bg-container"></div>
+        <div class="letter-inner">
+            <h2 class="letter-title">For you, my lovely</h2>
+            <div class="letter-content-scroll">
+                <p class="letter-content" id="typed-text"></p>
+            </div>
+            <div>
+                <button class="ps-btn" id="ps-button" onclick="openMosaic()">NEXT MOII CANTIK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mosaic-screen">
+        <h2 class="letter-title" style="font-size: 2rem; margin-bottom: 20px;">Coba zoom moi cantik</h2>
+        <div class="zoom-container" onmousemove="zoomImage(event)" onmouseleave="resetZoom()" ontouchmove="zoomImageTouch(event)" ontouchend="resetZoom()">
+            <p id="text-mosaic-content"></p>
+        </div>
+        <p class="mosaic-hint">coba arahin cursornya buat zoom moiii</p>
+        <div>
+            <button class="ps-btn show-btn" onclick="closeMosaic()">Kembali</button>
+            <button class="ps-btn show-btn" onclick="openGame()" style="background: rgba(255,182,193,0.3); font-weight: bold;">NEXT MAIN GAME DUYU MOI</button>
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <div class="game-header" id="score-text">Petals for Moi: 0 / 29</div>
+        <div id="basket"></div>
+        <div id="win-message">
+            <h2>YAYYYYY ADEK CANTIK MENANG!❤️</h2>
+            <button class="ps-btn show-btn" onclick="openPoem()" style="background: rgba(255,182,193,0.3); font-weight: bold; margin-top: 20px;">To the girl who deserves all the beautiful words in the world... I found this poem and immediately thought of you </button>
+        </div>
+    </div>
+
+    <div id="poem-screen">
+        <div id="romantic-bg-container-poem"></div>
+        <div class="poem-inner">
+            <h2 class="poem-title">Another Birthday Together</h2>
+            <div class="poem-content-scroll">
+                <p class="poem-content" id="typed-text-poem"></p>
+            </div>
+            <div>
+                <button class="ps-btn" id="video-button" onclick="playSecretVideo()" style="background: rgba(255,182,193,0.3); font-weight: bold;">NEXT ADA VIDEO BUAT AYANG!</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-screen">
+        <button class="close-video-btn" onclick="closeVideo()">✕</button>
+        <div class="video-container" onclick="togglePlayPause()">
+            <video id="memory-video" src="video-kita.mp4" preload="auto" playsinline></video>
+            <div class="play-pause-overlay" id="play-overlay">▶</div>
+        </div>
+    </div>
+
+    <script>
+        // CACHING GLOBAL - Mengurangi beban kerja browser secara masif
+        let winW = window.innerWidth;
+        let winH = window.innerHeight;
+        const isMobile = winW <= 768;
+        let firefliesElements = []; 
+
+        function initMosaicText() {
+            const container = document.querySelector('.zoom-container');
+            let w = container.offsetWidth || winW * 0.85;
+            let h = container.offsetHeight || winH * 0.6;
+            const charsNeeded = Math.ceil((w / 4) * (h / 7));
+            const baseText = "I love you more ";
+            const repeatCount = Math.ceil(charsNeeded / baseText.length) + 50; 
+            document.getElementById('text-mosaic-content').innerText = baseText.repeat(repeatCount);
+        }
+        
+        initMosaicText();
+        window.addEventListener('resize', () => {
+            winW = window.innerWidth;
+            winH = window.innerHeight;
+            initMosaicText();
+        });
+
+        const photoUrls = [
+            "foto1.jpg", "foto2.jpg", "foto3.jpg",
+            "foto4.jpg", "foto5.jpg", "foto6.jpg",
+            "foto7.jpg", "foto8.jpg", "foto9.jpg"
+        ]; 
+
+        function setupPhotos() {
+            const heartGrid = document.getElementById('heart-grid');
+            const introBg = document.getElementById('intro-bg-photos'); 
+            
+            // Menggunakan Document Fragment (Batch Render = Ringan)
+            const fragHeart = document.createDocumentFragment();
+            photoUrls.forEach(url => {
+                let imgHeart = document.createElement('img');
+                imgHeart.src = url;
+                imgHeart.onerror = function() { this.src = 'https://via.placeholder.com/300?text=Foto+Moi'; }; 
+                fragHeart.appendChild(imgHeart);
+            });
+            heartGrid.appendChild(fragHeart);
+            
+            let loopCount = isMobile ? 2 : 6;
+            const fragIntro = document.createDocumentFragment();
+            for (let d = 0; d < loopCount; d++) {
+                photoUrls.forEach((url) => {
+                    let imgIntro = document.createElement('img');
+                    imgIntro.src = url; imgIntro.className = 'intro-photo';
+                    imgIntro.onerror = function() { this.style.display = 'none'; }; 
+                    imgIntro.style.left = (Math.random() * 90) + 'vw'; imgIntro.style.top = (Math.random() * 90) + 'vh';
+                    let size = 50 + Math.random() * 80; imgIntro.style.width = size + 'px'; imgIntro.style.height = size + 'px';
+                    imgIntro.style.animationDelay = `-${Math.random() * 20}s`; imgIntro.style.animationDuration = (15 + Math.random() * 10) + 's';
+                    fragIntro.appendChild(imgIntro);
+                });
+            }
+            introBg.appendChild(fragIntro);
+        }
+        setupPhotos();
+
+        function createStars() {
+            const container = document.getElementById('star-container');
+            let starCount = isMobile ? 50 : 150;
+            const fragStars = document.createDocumentFragment();
+            
+            for (let i = 0; i < starCount; i++) {
+                let star = document.createElement('div'); star.className = 'star';
+                star.style.left = Math.random() * 100 + 'vw'; star.style.top = Math.random() * 100 + 'vh';
+                let size = Math.random() * 3; star.style.width = size + 'px'; star.style.height = size + 'px';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's'; star.style.animationDelay = Math.random() * 5 + 's';
+                fragStars.appendChild(star);
+            }
+            container.appendChild(fragStars);
+            
+            setInterval(() => {
+                let shootingStar = document.createElement('div'); shootingStar.className = 'shooting-star';
+                shootingStar.style.top = (Math.random() * 40) + 'vh'; shootingStar.style.left = (Math.random() * 100) + 'vw';
+                container.appendChild(shootingStar); setTimeout(() => { shootingStar.remove(); }, 2500);
+            }, 3000);
+        }
+        createStars();
+
+        function createRomanticElements(targetContainerId) {
+            const container = document.getElementById(targetContainerId);
+            let heartCount = isMobile ? 5 : 15;
+            let dustCount = isMobile ? 10 : 30;
+            const frag = document.createDocumentFragment();
+
+            for(let i=0; i<heartCount; i++) {
+                let heart = document.createElement('div'); heart.className = 'floating-heart';
+                heart.style.left = Math.random() * 100 + 'vw'; heart.style.animationDuration = (Math.random() * 5 + 6) + 's'; heart.style.animationDelay = Math.random() * 5 + 's';
+                frag.appendChild(heart);
+            }
+            for(let i=0; i<dustCount; i++) {
+                let dust = document.createElement('div'); dust.className = 'magical-dust';
+                dust.style.left = Math.random() * 100 + 'vw'; dust.style.top = Math.random() * 70 + 'vh';
+                dust.style.animationDuration = (Math.random() * 4 + 3) + 's'; dust.style.animationDelay = Math.random() * 4 + 's';
+                frag.appendChild(dust);
+            }
+            container.appendChild(frag);
+        }
+        createRomanticElements('romantic-bg-container');
+        setTimeout(() => createRomanticElements('romantic-bg-container-poem'), 100);
+
+        function createGardenAndFireflies() {
+            const garden = document.getElementById('garden-bottom');
+            const fireflyContainer = document.getElementById('firefly-container');
+            garden.innerHTML = ''; fireflyContainer.innerHTML = ''; firefliesElements = [];
+
+            const fragGarden = document.createDocumentFragment();
+            let leafCount = isMobile ? 20 : 60;
+            for (let i = 0; i < leafCount; i++) {
+                let leaf = document.createElement('div'); leaf.className = 'leaf-wrapper';
+                leaf.style.left = (Math.random() * 100) + 'vw'; leaf.style.transform = `scale(${0.3 + Math.random() * 0.4})`;
+                leaf.style.animation = `sway-leaf ${3 + Math.random()}s ease-in-out -${Math.random() * 3}s infinite alternate`; leaf.style.opacity = '0.6';
+                leaf.innerHTML = `<svg width="40" height="150" viewBox="0 0 100 250"><defs><linearGradient id="leafGrad" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="rgba(35, 64, 44, 0.1)" /><stop offset="100%" stop-color="rgba(119, 148, 129, 0.8)" /></linearGradient></defs><path d="M50,250 Q40,125 50,0 Q60,125 50,250 L48,150 Z" fill="url(#leafGrad)"/><path d="M50,250 Q10,150 20,50 Q40,120 50,250" fill="url(#leafGrad)" opacity="0.6"/><path d="M50,250 Q90,150 80,50 Q60,120 50,250" fill="url(#leafGrad)" opacity="0.6"/></svg>`;
+                fragGarden.appendChild(leaf);
+            }
+            
+            for (let i = 0; i < 29; i++) {
+                let flower = document.createElement('div'); flower.className = 'flower-wrapper';
+                flower.style.left = (i * (100 / 29)) + 'vw'; flower.style.transform = `scale(${0.3 + Math.random() * 0.3})`;
+                flower.style.animationDelay = `-${Math.random() * 4}s`; flower.style.marginBottom = `${Math.random() * 30}px`;
+                flower.innerHTML = `<svg width="60" height="180" viewBox="0 0 100 200" style="filter: drop-shadow(0 0 5px rgba(255,182,193,0.3));"><defs><linearGradient id="petalGrad${i}" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="rgba(255, 140, 160, 0.9)" /><stop offset="100%" stop-color="rgba(253, 243, 244, 0.9)" /></linearGradient><linearGradient id="stemGrad${i}" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="rgba(80, 120, 95, 0)" /><stop offset="50%" stop-color="rgba(139, 168, 149, 0.9)" /><stop offset="100%" stop-color="rgba(139, 168, 149, 0.6)" /></linearGradient></defs><path d="M50,200 Q${40 + Math.random()*20},130 50,70" stroke="url(#stemGrad${i})" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M50,150 Q10,130 30,100 Q40,130 50,140" fill="rgba(139, 168, 149, 0.7)"/><path d="M50,130 Q90,110 70,80 Q60,110 50,120" fill="rgba(139, 168, 149, 0.7)"/><path d="M50,70 C15,70 10,20 30,5 C45,35 50,70 50,70" fill="url(#petalGrad${i})" opacity="0.9"/><path d="M50,70 C85,70 90,20 70,5 C55,35 50,70 50,70" fill="url(#petalGrad${i})" opacity="0.9"/><path d="M50,70 C25,60 35,10 50,5 C65,10 75,60 50,70" fill="url(#petalGrad${i})"/><circle cx="50" cy="60" r="5" fill="#fffde7"/><circle cx="50" cy="60" r="2" fill="#ffffff"/></svg>`;
+                fragGarden.appendChild(flower);
+            }
+            garden.appendChild(fragGarden);
+            
+            const fragFireflies = document.createDocumentFragment();
+            let fireflyCount = isMobile ? 10 : 25;
+            for (let i = 0; i < fireflyCount; i++) {
+                let firefly = document.createElement('div'); firefly.className = 'firefly';
+                let startLeft = Math.random() * 100;
+                firefly.style.left = startLeft + 'vw';
+                firefly.style.bottom = (Math.random() * 30) + 'vh';
+                firefly.style.animationDelay = `-${Math.random() * 5}s`;
+                fragFireflies.appendChild(firefly);
+                
+                // HAFAALKAN elemen di memori agar tidak perlu panggil DOM di saat jalan
+                firefliesElements.push({ el: firefly, startLeft: startLeft });
+            }
+            fireflyContainer.appendChild(fragFireflies);
+        }
+        createGardenAndFireflies();
+
+        let isMoving = false;
+        function handleMouseMove(e) { 
+            if(!isMoving) {
+                window.requestAnimationFrame(() => {
+                    attractFireflies(e.clientX); 
+                    if(gameActive) moveBasket(e.clientX);
+                    isMoving = false;
+                });
+                isMoving = true;
+            }
+        }
+        function handleTouchMove(e) { 
+            if(!isMoving) {
+                window.requestAnimationFrame(() => {
+                    const x = e.touches[0].clientX; 
+                    attractFireflies(x); 
+                    if(gameActive) moveBasket(x); 
+                    isMoving = false;
+                });
+                isMoving = true;
+            }
+        }
+
+        function attractFireflies(x) {
+            if(gameActive) return; 
+            const mousePercent = (x / winW) * 100;
+            // Gunakan array memori, bukan querySelectorAll (SUPER ENTENG)
+            for(let i=0; i < firefliesElements.length; i+=2) {
+                let ff = firefliesElements[i];
+                ff.el.style.transform = `translate3d(${(mousePercent - ff.startLeft) * 0.4}vw, 0, 0)`;
+            }
+        }
+
+        const suratText = "Selamat ulang tahun yang ke-22, Azha Fabian Faizara-ku.\n\nWanita hebat yang selalu jadi inspirasi dan semangat terbesarku. Terima kasih ya sayang, karena sudah terus tangguh dan berjuang, baik untuk dirimu sendiri maupun untuk hubungan kita.\n\nSemoga di usia yang baru ini, dede selalu dilimpahi kesehatan, kelancaran, dan kebahagiaan di setiap langkah yang adek lalui. Mas selalu percaya kalau adek adalah wanita yang luar biasa hebat.\n\nMamas seneng banget bisa selalu nemenin kamu, dan rasanya ingin terus begini nemenin ayang sampai nanti. Mas yakin, kita berdua pasti bisa melewati apa pun bersama-sama!\n\nI love you so much, sayang. mwamwaaaa, today is your day! 🤍";
+        const poemText = "Your birthday marks another year together;\nSuch happy times, I couldn’t ask for more,\nSpending precious minutes, hours and days\nWith you, my love, whom I cherish and adore.\n\nWe’ve shared so much, we two, in love and friendship;\nEach year our bond just seems to grow and grow.\nI always want to be right next to you;\nTo be with you means more than you can know.\n\nYou’re always there for me with a loving smile;\nI’m never happier than when I know you’re near.\nI thought my love for you could not grow stronger;\nAnd yet I love you even more this year.";
+        
+        let typeIndex = 0; let isTyping = false;
+        let poemTypeIndex = 0; let isPoemTyping = false;
+
+        function startExperience() {
+            const intro = document.getElementById('intro-screen');
+            const bgMusic = document.getElementById('bg-music');
+            
+            bgMusic.currentTime = 0;
+            bgMusic.volume = 0.6;
+            bgMusic.play().then(() => {}).catch(e => {
+                document.addEventListener('click', () => { bgMusic.play(); }, {once: true});
+            });
+
+            intro.style.opacity = '0';
+            setTimeout(() => {
+                intro.style.display = 'none';
+                document.getElementById('heart-photo-container').style.opacity = '1';
+                document.getElementById('heart-photo-container').style.transform = 'translate(-50%, -50%) scale(1)';
+                document.getElementById('top-decor').style.opacity = '1';
+            }, 1500);
+        }
+
+        function typeWriter() {
+            if (typeIndex < suratText.length) {
+                let char = suratText.charAt(typeIndex);
+                document.getElementById("typed-text").innerHTML += char === '\n' ? '<br>' : char;
+                typeIndex++;
+                const scrollArea = document.querySelector('.letter-content-scroll');
+                scrollArea.scrollTop = scrollArea.scrollHeight; 
+                setTimeout(typeWriter, 40);
+            } else {
+                document.getElementById('ps-button').classList.add('show-btn');
+            }
+        }
+
+        function typeWriterPoem() {
+            if (poemTypeIndex < poemText.length) {
+                let char = poemText.charAt(poemTypeIndex);
+                document.getElementById("typed-text-poem").innerHTML += char === '\n' ? '<br>' : char;
+                poemTypeIndex++;
+                const scrollAreaPoem = document.querySelector('#poem-screen .poem-content-scroll');
+                scrollAreaPoem.scrollTop = scrollAreaPoem.scrollHeight; 
+                setTimeout(typeWriterPoem, 50); 
+            } else {
+                document.getElementById('video-button').classList.add('show-btn');
+            }
+        }
+
+        function openLetter() {
+            document.getElementById('bg-music').play().catch(e => {});
+
+            const heart = document.getElementById('heart-photo-container');
+            heart.style.transform = 'translate(-50%, -50%) scale(1.5)'; heart.style.opacity = '0'; heart.style.pointerEvents = 'none';
+            document.getElementById('top-decor').style.opacity = '0';
+            
+            document.getElementById('garden-bottom').style.opacity = '1';
+            document.getElementById('firefly-container').style.opacity = '1';
+
+            setTimeout(() => { 
+                document.getElementById('letter-screen').classList.add('show'); 
+                document.getElementById('romantic-bg-container').style.opacity = '1';
+                if(!isTyping) { isTyping = true; setTimeout(typeWriter, 800); }
+            }, 600);
+        }
+
+        function openMosaic() {
+            document.getElementById('letter-screen').classList.remove('show');
+            document.getElementById('romantic-bg-container').style.opacity = '0';
+            setTimeout(() => { 
+                document.getElementById('mosaic-screen').classList.add('show'); 
+                initMosaicText(); 
+            }, 1000);
+        }
+
+        function closeMosaic() {
+            document.getElementById('mosaic-screen').classList.remove('show');
+            setTimeout(() => { 
+                document.getElementById('letter-screen').classList.add('show');
+                document.getElementById('romantic-bg-container').style.opacity = '1';
+                document.querySelector('.letter-content-scroll').scrollTop = 0;
+            }, 1000);
+        }
+
+        function openPoem() {
+            document.getElementById('win-message').style.display = 'none';
+            document.getElementById('game-screen').style.opacity = '0';
+            
+            setTimeout(() => {
+                document.getElementById('game-screen').style.display = 'none';
+                document.getElementById('poem-screen').classList.add('show');
+                if(!isPoemTyping) { isPoemTyping = true; setTimeout(typeWriterPoem, 1000); }
+            }, 1000);
+        }
+
+        function zoomImage(e) { const c = e.currentTarget, cont = document.getElementById('text-mosaic-content'), r = c.getBoundingClientRect(); cont.style.transformOrigin = `${((e.clientX - r.left)/r.width)*100}% ${((e.clientY - r.top)/r.height)*100}%`; cont.style.transform = 'scale(6)'; }
+        function zoomImageTouch(e) { const c = e.currentTarget, cont = document.getElementById('text-mosaic-content'), r = c.getBoundingClientRect(), t = e.touches[0]; cont.style.transformOrigin = `${((t.clientX - r.left)/r.width)*100}% ${((t.clientY - r.top)/r.height)*100}%`; cont.style.transform = 'scale(6)'; }
+        function resetZoom() { const cont = document.getElementById('text-mosaic-content'); cont.style.transform = 'scale(1)'; cont.style.transformOrigin = 'center center'; }
+
+        /* --- GAME LOGIC (PURE MATH COLLISION = SUPER FAST) --- */
+        let gameActive = false; let score = 0; let petals = []; let petalSpawner; let gameLoopRAF;
+        let basketX = winW / 2; // Posisi keranjang disimpan di JS
+
+        function openGame() {
+            document.getElementById('mosaic-screen').classList.remove('show');
+            const gameScreen = document.getElementById('game-screen');
+            gameScreen.style.display = 'block';
+            setTimeout(() => { gameScreen.style.opacity = '1'; startGame(); }, 500);
+        }
+
+        function startGame() {
+            gameActive = true; score = 0;
+            petals.forEach(p => p.el.remove()); petals = [];
+            document.getElementById('score-text').innerText = `Petals for Moi: ${score} / 29`;
+            document.getElementById('win-message').style.display = 'none'; 
+            moveBasket(winW / 2);
+            petalSpawner = setInterval(spawnPetal, 600);
+            gameLoop();
+        }
+
+        function moveBasket(x) {
+            basketX = Math.max(50, Math.min(winW - 50, x));
+            document.getElementById('basket').style.transform = `translate3d(${basketX - 45}px, 0, 0)`; // 45px adalah offset agar ke tengah
+        }
+
+        function spawnPetal() {
+            if(!gameActive) return;
+            let petal = document.createElement('div'); petal.className = 'falling-petal';
+            let startX = Math.random() * (winW - 30);
+            const pinks = ['#ffb6c1', '#ff69b4', '#ffc0cb', '#ffe0e6'];
+            petal.style.background = `radial-gradient(circle at top left, #fff, ${pinks[Math.floor(Math.random()*pinks.length)]})`;
+            document.getElementById('game-screen').appendChild(petal);
+            petals.push({ el: petal, x: startX, y: -30, speed: 2.5 + Math.random() * 3 });
+        }
+
+        function gameLoop() {
+            if(!gameActive) return;
+            
+            // Perhitungan Matemetika Murni, Tanpa membaca DOM sama sekali.
+            let basketTop = winH - 65; 
+            let basketBottom = winH - 20;
+
+            for(let i = petals.length - 1; i >= 0; i--) {
+                let p = petals[i]; p.y += p.speed; 
+                
+                // Hardware Accelerated Transform 
+                p.el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0) rotate(45deg)`;
+                
+                let pBottom = p.y + 20;
+                let pRight = p.x + 20;
+
+                // Tabrakan dengan keranjang (AABB Collision Detection)
+                if (pBottom >= basketTop && p.y <= basketBottom && pRight >= (basketX - 45) && p.x <= (basketX + 45)) {
+                    p.el.remove(); petals.splice(i, 1); score++;
+                    document.getElementById('score-text').innerText = `Petals for Moi: ${score} / 29`;
+                    if(score >= 29) { winGame(); }
+                } else if (p.y > winH) { 
+                    p.el.remove(); petals.splice(i, 1); 
+                }
+            }
+            gameLoopRAF = requestAnimationFrame(gameLoop);
+        }
+
+        function winGame() {
+            gameActive = false; clearInterval(petalSpawner);
+            for(let i=0; i<15; i++) {
+                setTimeout(() => {
+                    let star = document.createElement('div'); star.className = 'star';
+                    star.style.width = '12px'; star.style.height = '12px'; star.style.backgroundColor = '#ffb6c1';
+                    star.style.left = (15 + Math.random() * 70) + 'vw'; star.style.top = (15 + Math.random() * 50) + 'vh';
+                    star.style.boxShadow = '0 0 10px #ff69b4, 0 0 20px #fff'; star.style.animation = 'twinkle 0.4s infinite alternate';
+                    document.getElementById('game-screen').appendChild(star);
+                }, i * 150);
+            }
+            setTimeout(() => { document.getElementById('win-message').style.display = 'block'; }, 1500);
+        }
+
+        /* --- CUSTOM VIDEO PLAYER LOGIC --- */
+        const memoryVideo = document.getElementById('memory-video');
+        const playOverlay = document.getElementById('play-overlay');
+
+        function playSecretVideo() {
+            const poemScreen = document.getElementById('poem-screen');
+            const videoScreen = document.getElementById('video-screen');
+            const bgMusic = document.getElementById('bg-music');
+
+            poemScreen.classList.remove('show');
+            setTimeout(() => {
+                videoScreen.classList.add('show');
+                bgMusic.pause(); 
+                memoryVideo.pause();
+                playOverlay.style.opacity = '1';
+            }, 1000);
+        }
+
+        function togglePlayPause() {
+            if (memoryVideo.paused) {
+                memoryVideo.play();
+                playOverlay.style.opacity = '0'; 
+            } else {
+                memoryVideo.pause();
+                playOverlay.innerHTML = "▶";
+                playOverlay.style.opacity = '1'; 
+            }
+        }
+
+        memoryVideo.addEventListener('ended', function() {
+            playOverlay.innerHTML = "↻";
+            playOverlay.style.opacity = '1';
+        });
+
+        /* --- FUNGSI KEMBALI KE AWAL (FULL RESET) --- */
+        function closeVideo() {
+            const videoScreen = document.getElementById('video-screen');
+            const introScreen = document.getElementById('intro-screen');
+            const heart = document.getElementById('heart-photo-container');
+            const garden = document.getElementById('garden-bottom');
+            const firefly = document.getElementById('firefly-container');
+            const bgMusic = document.getElementById('bg-music');
+
+            videoScreen.classList.remove('show');
+            memoryVideo.pause(); 
+            memoryVideo.currentTime = 0; 
+            playOverlay.innerHTML = "▶"; 
+            
+            typeIndex = 0;
+            isTyping = false;
+            document.getElementById("typed-text").innerHTML = "";
+            document.getElementById('ps-button').classList.remove('show-btn');
+            
+            poemTypeIndex = 0;
+            isPoemTyping = false;
+            document.getElementById("typed-text-poem").innerHTML = "";
+            document.getElementById('video-button').classList.remove('show-btn');
+
+            heart.style.transform = 'translate(-50%, -50%) scale(0.9)'; 
+            heart.style.opacity = '0'; 
+            heart.style.pointerEvents = 'auto'; 
+            garden.style.opacity = '0';
+            firefly.style.opacity = '0';
+            
+            createGardenAndFireflies();
+
+            setTimeout(() => {
+                introScreen.style.display = 'flex';
+                setTimeout(() => {
+                    introScreen.style.opacity = '1';
+                    bgMusic.currentTime = 0; 
+                    bgMusic.play(); 
+                }, 100);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
